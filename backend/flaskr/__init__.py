@@ -40,7 +40,7 @@ def create_app(test_config=None):
 
         return jsonify({
             'success': True,
-            'categories': [category.format() for category in categories]
+            'categories': {category.id: category.type for category in categories}
         })
 
 
@@ -69,7 +69,8 @@ def create_app(test_config=None):
             'success': True,
             'questions': current_questions,
             'total_questions': len(questions),
-            'categories': [category.format() for category in categories]
+            'categories': {category.id: category.type for category in categories},
+            'current_category': None
         })
     
     def paginate_questions(request, questions):
@@ -154,7 +155,8 @@ def create_app(test_config=None):
             return jsonify({
                 'success': True,
                 'questions': [question.format() for question in questions],
-                'total_questions': len(questions)
+                'total_questions': len(questions),
+                'current_category': None
             })
         except KeyError:
             abort(400)
@@ -176,7 +178,8 @@ def create_app(test_config=None):
             return jsonify({
                 'success': True,
                 'questions': [question.format() for question in questions],
-                'total_questions': len(questions)
+                'total_questions': len(questions),
+                'current_category': category_id
             })
         except:
             abort(400)
@@ -198,11 +201,12 @@ def create_app(test_config=None):
 
             previous_questions = body['previous_questions']
             quiz_category = body['quiz_category']
+            category_id = int(quiz_category.get('id'))
 
-            if quiz_category is None:
-                questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
+            if category_id:
+                questions = Question.query.filter(Question.id.notin_(previous_questions), Question.category == category_id).all()
             else:
-                questions = Question.query.filter(Question.id.notin_(previous_questions), Question.category == quiz_category['id']).all()
+                questions = Question.query.filter(Question.id.notin_(previous_questions)).all()
 
             new_question = questions[random.randrange(0, len(questions))].format()
 
