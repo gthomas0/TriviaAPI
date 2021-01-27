@@ -40,13 +40,25 @@ psql trivia < trivia.psql
 
 From within the `backend` directory first ensure you are working using your created virtual environment.
 
-To run the server, execute:
-
+Necessary Settings:
 ```bash
 export FLASK_APP=flaskr
 export FLASK_ENV=development
+```
+
+Optional Settings:
+```bash
+export DB_HOST=127.0.0.1:5432
+export DB_USER=postgres
+export DB_PASSWORD=postgres
+export DB_NAME=trivia
+```
+
+Run the server:
+```bash
 flask run
 ```
+
 
 Setting the `FLASK_ENV` variable to `development` will detect file changes and restart the server automatically.
 
@@ -82,8 +94,8 @@ One note before you delve into your tasks: for each endpoint you are expected to
  'success': True}
 ```
 
-`GET '/questions?page=<page_number>'`
-- Fetches a list of questions, number of total questions, current category, and categories. This endpoint can handle pagination with the optional parameter `page`. The pagination returns 10 questions at a time.
+`GET '/questions?page=<page_number>&limit=<limit>'`
+- Fetches a list of questions, number of total questions, current category, and categories. This endpoint can handle pagination with the optional parameters `page` and `limit`.
 - Request Arguments: page:int (optional)
 - Example Response:
 ```json
@@ -243,7 +255,12 @@ One note before you delve into your tasks: for each endpoint you are expected to
 
 ## Testing
 To run the tests, run
-```
+
+```bash
+export DB_HOST=127.0.0.1:5432
+export DB_USER=postgres
+export DB_PASSWORD=postgres
+export DB_NAME=trivia_test
 dropdb trivia_test
 createdb trivia_test
 psql trivia_test < trivia.psql
