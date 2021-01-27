@@ -14,9 +14,12 @@ class TriviaTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "trivia_test"
-        self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
-        setup_db(self.app, self.database_path)
+        db_host = os.getenv('DB_HOST', '127.0.0.1:5432')
+        db_user = os.getenv('DB_USER', 'postgres')
+        db_pass = os.getenv('DB_PASSWORD', 'postgres')
+        db_name = os.getenv('DB_NAME', 'trivia_test')
+        database_path = f"postgres://{db_user}:{db_pass}@{db_host}/{db_name}"
+        setup_db(self.app, database_path)
 
         # binds the app to the current context
         with self.app.app_context():
@@ -24,15 +27,11 @@ class TriviaTestCase(unittest.TestCase):
             self.db.init_app(self.app)
             # create all tables
             self.db.create_all()
-    
+
     def tearDown(self):
         """Executed after reach test"""
         pass
 
-    """
-    TODO
-    Write at least one test for each test for successful operation and for expected errors.
-    """
     def test_get_categories(self):
         resp = self.client().get('/categories')
         data = json.loads(resp.data)
@@ -50,7 +49,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(len(data['questions']))
         self.assertTrue(len(data['categories']))
         self.assertTrue(data['total_questions'])
-    
+
     def test_404_questions_page_too_big(self):
         resp = self.client().get('/questions?page=1000')
         data = json.loads(resp.data)
@@ -73,23 +72,23 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(data['success'], True)
         self.assertEqual(data['deleted'], str(question.id))
 
+    def test_400_delete_question(self):
+        resp = self.client().delete('/questions/a')
+        data = json.loads(resp.data)
+
+        self.assertEqual(resp.status_code, 400)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['error'], 400)
+        self.assertEqual(data['message'], 'Bad Request')
+
     def test_404_delete_question(self):
-        resp = self.client().delete('/questions/')
+        resp = self.client().delete('/questions/1000')
         data = json.loads(resp.data)
 
         self.assertEqual(resp.status_code, 404)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['error'], 404)
         self.assertEqual(data['message'], 'Not Found')
-
-    def test_422_delete_question(self):
-        resp = self.client().delete('/questions/1000')
-        data = json.loads(resp.data)
-
-        self.assertEqual(resp.status_code, 422)
-        self.assertEqual(data['success'], False)
-        self.assertEqual(data['error'], 422)
-        self.assertEqual(data['message'], 'Unprocessable Entity')
 
     def test_create_question(self):
         question = Question(question='test delete question',
